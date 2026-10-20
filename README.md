@@ -49,7 +49,7 @@ The project intentionally avoids:
 - Manual APK packaging, DEX generation and native `.so` injection
 - Touch input and multi-touch particle demo
 - No Gradle, no Android Studio, no `cargo-apk`
-- Release APK of ~430 KiB from a cold build in ~2m30s on the reference device
+- Release APK under 450 KiB with a single deflated native `.so`
 
 ---
 
@@ -167,13 +167,15 @@ link reference.
 | Termux (aarch64) | — | provides `$PREFIX`, `pkg` packages below |
 | Rust | 1.85 | edition 2024; `rust-std` for `aarch64-linux-android` |
 | Android SDK platform | `android-34` | only `platforms/android-34/android.jar` is used |
-| NDK with aarch64 prebuilt | r29 | `toolchains/llvm/prebuilt/linux-aarch64` |
+| Termux-adapted NDK (`termux-ndk`) | r29 (aarch64) | provides `toolchains/llvm/prebuilt/linux-aarch64` |
 | openjdk-17 | 17 | `javac`, `keytool` |
 | aapt2, d8, apksigner, zipalign, zip | — | all via `pkg` |
 
 ---
 
 ## Termux Setup
+
+Install required packages:
 
 ```bash
 pkg update
@@ -185,21 +187,55 @@ pkg install \
   apksigner \
   zipalign \
   zip
-
-# The Termux rust package already ships the Android standard library
-# (aarch64-linux-android, armv7-linux-androideabi, i686-linux-android,
-# x86_64-linux-android); no extra target setup is needed.
 ```
 
-Environment used by the build:
+The Termux `rust` package already ships the Android standard library
+(`aarch64-linux-android`, `armv7-linux-androideabi`, `i686-linux-android`,
+`x86_64-linux-android`), so no extra target setup is needed.
+
+## Android SDK Setup
+
+The build expects two environment variables pointing wherever each piece was
+installed (no fixed location required):
+
+- `ANDROID_HOME` — an Android SDK whose `platforms/android-34/` holds
+  `android.jar` (only this stub is used from the SDK). Install it with the SDK
+  command-line tools:
 
 ```bash
-export ANDROID_HOME="$HOME/Projects/Android/android-sdk"          # needs platforms/android-34
-export ANDROID_NDK_HOME="$HOME/Projects/Android/android-ndk/android-ndk-r29"
+sdkmanager "platforms;android-34"
 ```
 
-The NDK must provide `toolchains/llvm/prebuilt/linux-aarch64`; upstream releases
-ship the x86_64 prebuilt, which cannot execute in Termux.
+- `ANDROID_NDK_HOME` — the extracted Termux-adapted NDK root (the directory
+  containing `build/cmake/android.toolchain.cmake`).
+
+```bash
+export ANDROID_HOME=<your-sdk-dir>
+export ANDROID_NDK_HOME=<your-ndk-dir>
+```
+
+Only the platform stub is used from the SDK — packaging tools (`aapt2`, `d8`,
+`zipalign`, `apksigner`) come from the Termux packages above.
+
+## Android NDK
+
+This project uses `termux-ndk`.
+
+The official Android NDK does not integrate cleanly with Termux in many cases.
+The Termux-adapted NDK avoids several compatibility issues.
+
+Download the Termux-adapted NDK tarball (do NOT clone the repo — it does not
+contain a usable NDK tree) and extract it to a directory of your choice:
+
+```bash
+mkdir -p <ndk-parent-dir>
+curl -sL https://github.com/lzhiyong/termux-ndk/releases/download/android-ndk/android-ndk-r29-aarch64.tar.xz \
+  | tar -xJ -C <ndk-parent-dir>
+```
+
+Then set `ANDROID_NDK_HOME` to the extracted NDK root — the directory containing
+`build/cmake/android.toolchain.cmake` (check with `ls`, as the tarball creates a
+versioned subdirectory).
 
 ---
 
@@ -252,9 +288,8 @@ build-apk/final/app-signed.apk
 8. **Align and sign** — `zipalign -f 4` and
    `apksigner sign --ks-pass/--key-pass`.
 
-Measured on the reference device: **2m32s** for a cold release build (38
-packages resolved in `Cargo.lock`), ~0.4s when only the app crate is dirty, and
-a **438 KiB** signed APK containing a ~940 KiB `libmacroquad_android.so`.
+The signed APK is about **438 KiB** and contains a ~940 KiB
+`libmacroquad_android.so`.
 
 ---
 
