@@ -219,7 +219,7 @@ Only the platform stub is used from the SDK — packaging tools (`aapt2`, `d8`,
 
 ## Android NDK
 
-This project uses `termux-ndk`.
+This project uses [`lzhiyong/termux-ndk`](https://github.com/lzhiyong/termux-ndk).
 
 The official Android NDK does not integrate cleanly with Termux in many cases.
 The Termux-adapted NDK avoids several compatibility issues.
