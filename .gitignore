@@ -1,0 +1,33 @@
+# Build outputs
+build/
+build-java/
+build-apk/
+
+# Rust
+/target/
+*.rs.bk
+
+# Android
+*.apk
+*.ap_
+*.idsig
+*.dex
+
+# Java
+*.class
+
+# Native
+*.o
+*.so
+*.a
+
+# Keystore
+*.keystore
+*.jks
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

@@ -1,0 +1,23 @@
+[package]
+name = "macroquad-android"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+macroquad = "0.4"
+
+# Settings that keep the debug profile fast to compile (cargo build)
+[profile.dev]
+opt-level = 0            # No optimisation: compile as fast as possible
+incremental = true       # Recompile only what changed
+debug = 1                # Line tables only (much smaller binary, faster linking)
+overflow-checks = false  # Skip overflow checks in debug to save compile time
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
