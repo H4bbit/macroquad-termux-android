@@ -12,7 +12,7 @@ struct Particle {
     pos: Vec2,
     vel: Vec2,
     color: Color,
-    life: f32, // 1.0 (nova) -> 0.0 (morta)
+    life: f32, // 1.0 (just emitted) -> 0.0 (expired)
 }
 
 impl Particle {
@@ -88,7 +88,7 @@ async fn main() {
         }
 
         draw_text(
-            format!("FPS {} | particulas {}", get_fps(), particles.len()),
+            format!("FPS {} | particles {}", get_fps(), particles.len()),
             16.0,
             32.0,
             28.0,
